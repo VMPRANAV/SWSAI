@@ -3,12 +3,10 @@ const Notification = require('../models/Notification.model');
 const path = require('path');
 const fs = require('fs/promises');
 
-const bulkBatchState = new Map(); // batchId -> { totalFiles: number, receivedFiles: number }
+const bulkBatchState = new Map();
 
-// --- NEW: Added missing getFiles function ---
 const getFiles = async (req, res) => {
   try {
-    // Fetches all files, sorted by the most recent upload
     const files = await File.find().sort({ uploadDate: -1 });
     res.status(200).json(files);
   } catch (error) {
@@ -29,7 +27,7 @@ const handleUpload = async (req, res) => {
     const isBulk = totalFiles > 3;
 
     const fileData = files.map(file => ({
-      originalName: file.originalname, // Ensure this is stored for the UI table
+      originalName: file.originalname,
       size: file.size,
       mimetype: file.mimetype,
       path: path.posix.join('uploads', file.filename),
@@ -146,7 +144,6 @@ module.exports = {
       try {
         await fs.unlink(absolute);
       } catch {
-        // ok: file may already be missing on disk
       }
 
       await File.findByIdAndDelete(req.params.id);

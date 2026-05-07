@@ -12,7 +12,6 @@ const { handleUpload,
 const MAX_FILES_PER_REQUEST = Number(process.env.MAX_FILES_PER_REQUEST ?? 20);
 const MAX_FILE_SIZE_MB = Number(process.env.MAX_FILE_SIZE_MB ?? 10);
 
-// Upload endpoint expected by the frontend (`POST /api/upload`)
 router.post('/upload', upload.array('files', MAX_FILES_PER_REQUEST), handleUpload);
 router.get('/upload/config', (req, res) => {
   res.status(200).json({

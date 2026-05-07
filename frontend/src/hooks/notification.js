@@ -17,8 +17,9 @@ export const useNotifications = ({ onBulkComplete } = {}) => {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchNotifications();
+    const t = setTimeout(() => {
+      fetchNotifications();
+    }, 0);
 
     const handler = (payload) => {
       if (typeof onBulkComplete === 'function') onBulkComplete(payload);
@@ -27,7 +28,10 @@ export const useNotifications = ({ onBulkComplete } = {}) => {
 
     socket.on('bulk_upload_complete', handler);
 
-    return () => socket.off('bulk_upload_complete', handler);
+    return () => {
+      clearTimeout(t);
+      socket.off('bulk_upload_complete', handler);
+    };
   }, [onBulkComplete]);
 
   return { notifications, unreadCount, fetchNotifications };

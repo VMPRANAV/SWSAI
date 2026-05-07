@@ -31,10 +31,10 @@ function App() {
 
   const { notifications, unreadCount, fetchNotifications } = useNotifications({ onBulkComplete: handleBulkComplete });
 
-  const fetchFiles = async () => {
+  const fetchFiles = useCallback(async () => {
     const res = await axios.get(`${API_BASE_URL}/api/files`);
     setFiles(res.data);
-  };
+  }, []);
 
   const handleMarkAllRead = async () => {
     await axios.patch(`${API_BASE_URL}/api/notifications/read-all`);
@@ -54,9 +54,11 @@ function App() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchFiles();
-  }, []);
+    const t = setTimeout(() => {
+      fetchFiles();
+    }, 0);
+    return () => clearTimeout(t);
+  }, [fetchFiles]);
 
   return (
     <div className="min-h-screen bg-[radial-gradient(1200px_circle_at_20%_0%,rgba(37,99,235,0.10),transparent_55%),radial-gradient(900px_circle_at_80%_10%,rgba(37,99,235,0.08),transparent_50%)]">

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
 
 const FileUpload = ({ onUploadSuccess, onUploadStart }) => {
-  const [uploadQueue, setUploadQueue] = useState([]); // { id, name, size, type, progress, status }
+  const [uploadQueue, setUploadQueue] = useState([]);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [showDetails, setShowDetails] = useState(true);
   const [maxFilesPerRequest, setMaxFilesPerRequest] = useState(20);
@@ -96,8 +96,6 @@ const FileUpload = ({ onUploadSuccess, onUploadStart }) => {
     };
 
     try {
-      // Since we upload per-file (1 file per request), we always satisfy multer's `limits.files`,
-      // but still guard against accidental huge fanout.
       if (maxFilesPerRequest <= 0) setMaxFilesPerRequest(20);
 
       const tasks = files.map((file, index) => ({ file, id: uploadIds[index] }));
