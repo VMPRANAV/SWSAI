@@ -1,14 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import Header from './components/Header';
 import FileUpload from './components/FileUpload';
 import { useNotifications } from './hooks/notification';
 import { API_BASE_URL } from './config/api';
 import { Trash2 } from 'lucide-react';
+import { Toasts } from './components/Toasts';
 
 function App() {
   const [files, setFiles] = useState([]);
-  const { notifications, unreadCount, fetchNotifications } = useNotifications();
+  const [toasts, setToasts] = useState([]);
+  const toastSeqRef = useRef(0);
+
+  const addToast = useCallback(({ type = 'info', title, message, durationMs } = {}) => {
+    const id = `t${toastSeqRef.current++}`;
+    setToasts((prev) => [...prev, { id, type, title, message, durationMs }]);
+    return id;
+  }, []);
+
+  const dismissToast = useCallback((id) => setToasts((prev) => prev.filter((t) => t.id !== id)), []);
+
+  const handleBulkComplete = useCallback(
+    (payload) => {
+      const message =
+        typeof payload?.message === 'string' && payload.message.length ? payload.message : 'Bulk upload complete.';
+      addToast({ type: 'success', title: 'Upload complete', message });
+    },
+    [addToast]
+  );
+
+  const { notifications, unreadCount, fetchNotifications } = useNotifications({ onBulkComplete: handleBulkComplete });
 
   const fetchFiles = async () => {
     const res = await axios.get(`${API_BASE_URL}/api/files`);
@@ -27,6 +48,7 @@ function App() {
 
   const handleDeleteFile = async (id) => {
     await axios.delete(`${API_BASE_URL}/api/files/${id}`);
+    addToast({ type: 'info', title: 'Deleted', message: 'File deleted.' });
     await fetchFiles();
     fetchNotifications();
   };
@@ -38,6 +60,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(1200px_circle_at_20%_0%,rgba(37,99,235,0.10),transparent_55%),radial-gradient(900px_circle_at_80%_10%,rgba(37,99,235,0.08),transparent_50%)]">
+      <Toasts toasts={toasts} onDismiss={dismissToast} />
       <Header 
         unreadCount={unreadCount} 
         notifications={notifications} 
@@ -52,7 +75,23 @@ function App() {
             <p className="text-slate-500 mt-1">Upload PDFs, track progress, and download stored documents.</p>
           </div>
         </div>
-        <FileUpload onUploadSuccess={fetchFiles} />
+        <FileUpload
+          onUploadSuccess={() => {
+            addToast({ type: 'success', title: 'Uploaded', message: 'Upload complete.' });
+            fetchFiles();
+          }}
+          onUploadStart={(count, isBulk) => {
+            if (isBulk) {
+              addToast({
+                type: 'info',
+                title: 'Upload in progress',
+                message: `Processing ${count} files in background.`,
+              });
+              return;
+            }
+            addToast({ type: 'info', title: 'Uploading', message: `Uploading ${count} file(s)...`, durationMs: 2200 });
+          }}
+        />
 
         <div className="mt-8 bg-white shadow-sm rounded-2xl overflow-hidden border border-slate-200">
           <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">

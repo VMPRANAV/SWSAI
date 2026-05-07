@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
 
-const FileUpload = ({ onUploadSuccess }) => {
+const FileUpload = ({ onUploadSuccess, onUploadStart }) => {
   const [uploadQueue, setUploadQueue] = useState([]); // { id, name, size, type, progress, status }
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [showDetails, setShowDetails] = useState(true);
@@ -50,6 +50,7 @@ const FileUpload = ({ onUploadSuccess }) => {
 
     setIsBulkProcessing(isBulk);
     setShowDetails(!isBulk);
+    if (typeof onUploadStart === 'function') onUploadStart(files.length, isBulk);
 
     const newUploads = files.map((file, index) => ({
       id: Date.now() + index,
@@ -113,7 +114,7 @@ const FileUpload = ({ onUploadSuccess }) => {
 
       await Promise.all(workers);
 
-      onUploadSuccess();
+      if (typeof onUploadSuccess === 'function') onUploadSuccess();
       setIsBulkProcessing(false);
 
       if (inputRef.current) inputRef.current.value = '';

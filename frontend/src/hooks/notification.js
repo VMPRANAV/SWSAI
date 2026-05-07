@@ -5,7 +5,7 @@ import { API_BASE_URL, SOCKET_URL } from '../config/api';
 
 const socket = io(SOCKET_URL);
 
-export const useNotifications = () => {
+export const useNotifications = ({ onBulkComplete } = {}) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -20,12 +20,15 @@ export const useNotifications = () => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNotifications();
 
-    socket.on('bulk_upload_complete', () => {
+    const handler = (payload) => {
+      if (typeof onBulkComplete === 'function') onBulkComplete(payload);
       fetchNotifications();
-    });
+    };
 
-    return () => socket.off('bulk_upload_complete');
-  }, []);
+    socket.on('bulk_upload_complete', handler);
+
+    return () => socket.off('bulk_upload_complete', handler);
+  }, [onBulkComplete]);
 
   return { notifications, unreadCount, fetchNotifications };
 };
