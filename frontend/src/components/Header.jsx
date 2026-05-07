@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Bell } from 'lucide-react';
 
-const Header = ({ unreadCount, notifications, onMarkAllRead }) => {
+const Header = ({ unreadCount, notifications, onMarkAllRead, onMarkRead }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -40,14 +40,21 @@ const Header = ({ unreadCount, notifications, onMarkAllRead }) => {
                 <div className="p-6 text-center text-gray-400 italic">No new notifications</div>
               ) : (
                 notifications.map(n => (
-                  <div key={n._id} className={`p-4 border-b hover:bg-gray-50 transition ${!n.isRead ? 'bg-blue-50' : ''}`}>
+                  <button
+                    key={n._id}
+                    type="button"
+                    onClick={async () => {
+                      if (!n.isRead) await onMarkRead(n._id);
+                    }}
+                    className={`w-full text-left p-4 border-b hover:bg-gray-50 transition ${!n.isRead ? 'bg-blue-50' : ''}`}
+                  >
                     <p className={`text-sm ${!n.isRead ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
                       {n.message}
                     </p>
                     <span className="text-[10px] text-gray-400 mt-1 block">
                       {new Date(n.timestamp).toLocaleString()}
                     </span>
-                  </div>
+                  </button>
                 ))
               )}
             </div>

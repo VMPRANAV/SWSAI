@@ -2,9 +2,12 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+const MAX_FILES_PER_REQUEST = Number(process.env.MAX_FILES_PER_REQUEST ?? 20);
+const MAX_FILE_SIZE_MB = Number(process.env.MAX_FILE_SIZE_MB ?? 10);
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.resolve(process.cwd(), 'uploads');
+    const uploadDir = path.resolve(__dirname, '..', 'uploads');
     try {
       fs.mkdirSync(uploadDir, { recursive: true });
       cb(null, uploadDir);
@@ -30,7 +33,10 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ 
   storage, 
   fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 } 
+  limits: {
+    fileSize: MAX_FILE_SIZE_MB * 1024 * 1024,
+    files: MAX_FILES_PER_REQUEST,
+  },
 });
 
 module.exports = upload;

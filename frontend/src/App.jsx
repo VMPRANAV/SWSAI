@@ -19,6 +19,11 @@ function App() {
     fetchNotifications();
   };
 
+  const handleMarkRead = async (id) => {
+    await axios.patch(`${API_BASE_URL}/api/notifications/${id}/read`);
+    fetchNotifications();
+  };
+
   useEffect(() => { fetchFiles(); }, []);
 
   return (
@@ -27,6 +32,7 @@ function App() {
         unreadCount={unreadCount} 
         notifications={notifications} 
         onMarkAllRead={handleMarkAllRead} 
+        onMarkRead={handleMarkRead}
       />
       
       <main className="max-w-4xl mx-auto p-8">

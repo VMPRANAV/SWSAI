@@ -1,5 +1,8 @@
 const File = require('../models/File.model');
 const Notification = require('../models/Notification.model');
+const path = require('path');
+
+const bulkBatchState = new Map(); // batchId -> { totalFiles: number, receivedFiles: number }
 
 // --- NEW: Added missing getFiles function ---
 const getFiles = async (req, res) => {
@@ -20,40 +23,50 @@ const handleUpload = async (req, res) => {
       return res.status(400).json({ message: 'No files uploaded.' });
     }
 
-    const isBulk = files.length > 3;
+    const batchId = typeof req.body?.batchId === 'string' && req.body.batchId.length > 0 ? req.body.batchId : null;
+    const totalFiles = Number(req.body?.totalFiles ?? 0);
+    const isBulk = totalFiles > 3;
 
     const fileData = files.map(file => ({
       originalName: file.originalname, // Ensure this is stored for the UI table
       size: file.size,
       mimetype: file.mimetype,
-      path: file.path,
+      path: path.posix.join('uploads', file.filename),
       status: 'complete'
     }));
 
     const savedFiles = await File.insertMany(fileData);
 
     if (isBulk) {
-      const notificationMsg = `${files.length} files uploaded successfully.`;
-      
-      const newNotification = await Notification.create({
-        message: notificationMsg,
-        type: 'success',
-        timestamp: new Date(),
-        isRead: false
-      });
+      if (batchId) {
+        const state = bulkBatchState.get(batchId) ?? { totalFiles: totalFiles || 0, receivedFiles: 0 };
+        state.totalFiles = totalFiles || state.totalFiles;
+        state.receivedFiles += files.length;
+        bulkBatchState.set(batchId, state);
 
-      const io = req.app.get('socketio');
-      if (io) {
-        io.emit('bulk_upload_complete', {
-          message: notificationMsg,
-          notification: newNotification
-        });
+        if (state.totalFiles > 0 && state.receivedFiles >= state.totalFiles) {
+          bulkBatchState.delete(batchId);
+          const notificationMsg = `${state.totalFiles} files uploaded successfully.`;
+
+          const newNotification = await Notification.create({
+            message: notificationMsg,
+            type: 'success',
+            timestamp: new Date(),
+            isRead: false,
+            bulkCount: state.totalFiles,
+          });
+
+          const io = req.app.get('socketio');
+          if (io) {
+            io.emit('bulk_upload_complete', {
+              message: notificationMsg,
+              notification: newNotification,
+            });
+          }
+        }
       }
 
-      return res.status(202).json({
-        message: 'Bulk upload initiated. Processing in background.',
-        files: savedFiles
-      });
+      return res.status(202).json({ message: 'Bulk upload accepted.', files: savedFiles });
     }
 
     return res.status(201).json({
@@ -63,6 +76,14 @@ const handleUpload = async (req, res) => {
 
   } catch (error) {
     console.error('Upload Error:', error);
+    try {
+      await Notification.create({
+        message: 'Upload failed.',
+        type: 'error',
+        timestamp: new Date(),
+        isRead: false,
+      });
+    } catch (_) {}
     res.status(500).json({ message: 'Internal Server Error during upload.' });
   }
 };
