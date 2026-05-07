@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 
 const FileUpload = ({ onUploadSuccess }) => {
   const [uploadQueue, setUploadQueue] = useState([]); // { id, name, progress, status }
@@ -26,7 +27,7 @@ const FileUpload = ({ onUploadSuccess }) => {
     files.forEach(f => formData.append('files', f));
 
     try {
-      await axios.post('http://localhost:5000/api/upload', formData, {
+      await axios.post(`${API_BASE_URL}/api/upload`, formData, {
         onUploadProgress: (progressEvent) => {
           const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadQueue(prev => prev.map(item => ({ ...item, progress: percent })));

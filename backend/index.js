@@ -12,12 +12,21 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server);
+const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+const corsOptions = {
+  origin: clientUrl,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: true,
+};
+
+const io = new Server(server, {
+  cors: corsOptions,
+});
 
 app.set('socketio', io);
 
 
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 

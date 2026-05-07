@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import axios from 'axios';
+import { API_BASE_URL, SOCKET_URL } from '../config/api';
 
-const socket = io('http://localhost:5000');
+const socket = io(SOCKET_URL);
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchNotifications = async () => {
-    const res = await axios.get('http://localhost:5000/api/notifications');
+    const res = await axios.get(`${API_BASE_URL}/api/notifications`);
     setNotifications(res.data);
-    const countRes = await axios.get('http://localhost:5000/api/notifications/unread-count');
+    const countRes = await axios.get(`${API_BASE_URL}/api/notifications/unread-count`);
     setUnreadCount(countRes.data.unreadCount);
   };
 

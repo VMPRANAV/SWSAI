@@ -2,19 +2,20 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Header from './components/Header';
 import FileUpload from './components/FileUpload';
-import { useNotifications } from './hooks/Notification';
+import { useNotifications } from './hooks/notification';
+import { API_BASE_URL } from './config/api';
 
 function App() {
   const [files, setFiles] = useState([]);
   const { notifications, unreadCount, fetchNotifications } = useNotifications();
 
   const fetchFiles = async () => {
-    const res = await axios.get('http://localhost:5000/api/files');
+    const res = await axios.get(`${API_BASE_URL}/api/files`);
     setFiles(res.data);
   };
 
   const handleMarkAllRead = async () => {
-    await axios.patch('http://localhost:5000/api/notifications/read-all');
+    await axios.patch(`${API_BASE_URL}/api/notifications/read-all`);
     fetchNotifications();
   };
 
@@ -48,7 +49,7 @@ function App() {
                   <td className="p-4">{(file.size / 1024).toFixed(2)} KB</td>
                   <td className="p-4">{new Date(file.uploadDate).toLocaleDateString()}</td>
                   <td className="p-4">
-                    <a href={`http://localhost:5000/${file.path}`} download className="text-blue-600">Download</a>
+                    <a href={`${API_BASE_URL}/${file.path}`} download className="text-blue-600">Download</a>
                   </td>
                 </tr>
               ))}
