@@ -7,6 +7,7 @@ const FileUpload = ({ onUploadSuccess }) => {
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [showDetails, setShowDetails] = useState(true);
   const [maxFilesPerRequest, setMaxFilesPerRequest] = useState(20);
+  const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef(null);
   const clearTimerRef = useRef(null);
 
@@ -136,14 +137,21 @@ const FileUpload = ({ onUploadSuccess }) => {
 
   const handleDrop = async (e) => {
     e.preventDefault();
+    setIsDragging(false);
     const dropped = Array.from(e.dataTransfer.files || []).filter((f) => f.type === 'application/pdf');
     await startUploads(dropped);
   };
 
   return (
     <div
-      className="p-6 border-2 border-dashed border-blue-200 rounded-2xl bg-white shadow-sm"
-      onDragOver={(e) => e.preventDefault()}
+      className={`p-6 border-2 border-dashed rounded-2xl bg-white shadow-sm transition duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+        isDragging ? 'border-blue-400 bg-blue-50/40' : 'border-blue-200'
+      }`}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setIsDragging(true);
+      }}
+      onDragLeave={() => setIsDragging(false)}
       onDrop={handleDrop}
     >
       <div className="flex items-center justify-between gap-3">
@@ -169,7 +177,7 @@ const FileUpload = ({ onUploadSuccess }) => {
           <button
             type="button"
             onClick={() => setShowDetails((v) => !v)}
-            className="text-xs text-blue-600 hover:underline"
+            className="text-xs text-blue-700 hover:underline font-semibold active:scale-[0.98] transition"
           >
             {showDetails ? 'Hide details' : 'Show details'}
           </button>
@@ -180,7 +188,7 @@ const FileUpload = ({ onUploadSuccess }) => {
         <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-blue-800">
           <div className="font-semibold">Upload in progress</div>
           <div className="text-sm">Processing {uploadQueue.length} files in background.</div>
-        </div>
+        </div>        
       )}
 
       {showDetails && (
@@ -191,13 +199,23 @@ const FileUpload = ({ onUploadSuccess }) => {
                 <span>
                   {file.name} ({file.size})
                 </span>
-                <span className={file.status === 'failed' ? 'text-red-500' : 'text-blue-500'}>
-                  {file.status} {file.progress}%
+                <span
+                  className={`inline-flex items-center gap-2 ${
+                    file.status === 'failed' ? 'text-red-600' : file.status === 'complete' ? 'text-emerald-700' : 'text-blue-700'
+                  }`}
+                >
+                  <span className="text-xs font-semibold capitalize">{file.status}</span>
+                  <span className="tabular-nums">{file.progress}%</span>
                 </span>
               </div>
               <div className="text-[11px] text-slate-500 mt-1">{file.type}</div>
               <div className="w-full bg-slate-100 h-2 rounded mt-2 overflow-hidden">
-                <div className="bg-blue-600 h-2 rounded transition-all" style={{ width: `${file.progress}%` }} />
+                <div
+                  className={`h-2 rounded transition-[width] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                    file.status === 'failed' ? 'bg-red-500' : file.status === 'complete' ? 'bg-emerald-500' : 'bg-blue-600'
+                  }`}
+                  style={{ width: `${file.progress}%` }}
+                />
               </div>
             </div>
           ))}

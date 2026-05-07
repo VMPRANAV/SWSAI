@@ -69,8 +69,16 @@ function App() {
               </tr>
             </thead>
             <tbody>
-              {files.map(file => (
-                <tr key={file._id} className="border-t border-slate-100">
+              {files.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="p-10 text-center">
+                    <div className="text-slate-900 font-semibold">No documents yet</div>
+                    <div className="text-slate-500 text-sm mt-1">Upload a PDF to see it listed here.</div>
+                  </td>
+                </tr>
+              ) : (
+              files.map(file => (
+                <tr key={file._id} className="border-t border-slate-100 hover:bg-slate-50/70 transition">
                   <td className="p-4 text-slate-900 font-medium">{file.originalName}</td>
                   <td className="p-4 text-slate-600">{(file.size / 1024).toFixed(2)} KB</td>
                   <td className="p-4 text-slate-600">{new Date(file.uploadDate).toLocaleString()}</td>
@@ -97,7 +105,7 @@ function App() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
