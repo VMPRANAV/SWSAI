@@ -1,6 +1,7 @@
 const File = require('../models/File.model');
 const Notification = require('../models/Notification.model');
 const path = require('path');
+const fs = require('fs/promises');
 
 const bulkBatchState = new Map(); // batchId -> { totalFiles: number, receivedFiles: number }
 
@@ -127,6 +128,42 @@ const markAllAsRead = async (req, res) => {
 module.exports = { 
   handleUpload, 
   getFiles, 
+  deleteFile: async (req, res) => {
+    try {
+      const file = await File.findById(req.params.id);
+      if (!file) return res.status(404).json({ message: 'File not found.' });
+
+      const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+      const candidatePath = typeof file.path === 'string' ? file.path : '';
+      const absolute = path.isAbsolute(candidatePath)
+        ? path.resolve(candidatePath)
+        : path.resolve(__dirname, '..', candidatePath);
+
+      if (!(absolute === uploadsDir || absolute.startsWith(uploadsDir + path.sep))) {
+        return res.status(400).json({ message: 'Invalid file path.' });
+      }
+
+      try {
+        await fs.unlink(absolute);
+      } catch {
+        // ok: file may already be missing on disk
+      }
+
+      await File.findByIdAndDelete(req.params.id);
+
+      await Notification.create({
+        message: `Deleted file: ${file.originalName}`,
+        type: 'info',
+        timestamp: new Date(),
+        isRead: false,
+      });
+
+      return res.status(200).json({ message: 'File deleted.', deletedId: String(req.params.id) });
+    } catch (error) {
+      console.error('Delete File Error:', error);
+      return res.status(500).json({ message: 'Failed to delete file.' });
+    }
+  },
   getNotifications, 
   getUnreadCount, 
   markAsRead, 

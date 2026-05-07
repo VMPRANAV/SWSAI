@@ -3,6 +3,7 @@ const router = express.Router();
 const upload = require('../middleware/upload');
 const { handleUpload, 
   getFiles, 
+  deleteFile,
   getNotifications, 
   getUnreadCount, 
   markAsRead, 
@@ -22,6 +23,7 @@ router.get('/upload/config', (req, res) => {
   });
 });
 router.get('/files', getFiles);
+router.delete('/files/:id', deleteFile);
 router.get('/notifications', getNotifications);
 router.get('/notifications/unread-count', getUnreadCount);
 router.patch('/notifications/read-all', markAllAsRead);

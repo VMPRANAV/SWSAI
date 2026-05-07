@@ -17,11 +17,10 @@ export const useNotifications = () => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNotifications();
 
-    socket.on('bulk_upload_complete', (notif) => {
-    
-      alert(notif.message); 
+    socket.on('bulk_upload_complete', () => {
       fetchNotifications();
     });
 

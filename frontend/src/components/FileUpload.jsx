@@ -142,12 +142,29 @@ const FileUpload = ({ onUploadSuccess }) => {
 
   return (
     <div
-      className="p-6 border-2 border-dashed border-gray-300 rounded-lg bg-white"
+      className="p-6 border-2 border-dashed border-blue-200 rounded-2xl bg-white shadow-sm"
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >
       <div className="flex items-center justify-between gap-3">
-        <input ref={inputRef} type="file" multiple accept=".pdf" onChange={handleFileChange} />
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-blue-600/10 text-blue-700 grid place-items-center">
+            <span className="font-bold text-xs tracking-wide">PDF</span>
+          </div>
+          <div>
+            <div className="font-bold text-slate-900">Upload PDFs</div>
+            <div className="text-xs text-slate-500">Choose files or drag & drop into this box.</div>
+          </div>
+        </div>
+
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          accept=".pdf"
+          onChange={handleFileChange}
+          className="text-sm"
+        />
         {uploadQueue.length > 0 && (
           <button
             type="button"
@@ -159,18 +176,17 @@ const FileUpload = ({ onUploadSuccess }) => {
         )}
       </div>
 
-      <div className="mt-2 text-xs text-gray-500">Drag & drop PDFs here, or choose files.</div>
-
       {isBulkProcessing && (
-        <div className="bg-blue-100 p-3 my-4 rounded">
-          Upload in progress — processing {uploadQueue.length} files in background.
+        <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-blue-800">
+          <div className="font-semibold">Upload in progress</div>
+          <div className="text-sm">Processing {uploadQueue.length} files in background.</div>
         </div>
       )}
 
       {showDetails && (
         <div className="mt-4 space-y-2">
           {uploadQueue.map((file) => (
-            <div key={file.id} className="p-2 border rounded">
+            <div key={file.id} className="p-3 border border-slate-200 rounded-xl bg-white">
               <div className="flex justify-between text-sm">
                 <span>
                   {file.name} ({file.size})
@@ -179,8 +195,8 @@ const FileUpload = ({ onUploadSuccess }) => {
                   {file.status} {file.progress}%
                 </span>
               </div>
-              <div className="text-[11px] text-gray-500 mt-1">{file.type}</div>
-              <div className="w-full bg-gray-200 h-2 rounded mt-1">
+              <div className="text-[11px] text-slate-500 mt-1">{file.type}</div>
+              <div className="w-full bg-slate-100 h-2 rounded mt-2 overflow-hidden">
                 <div className="bg-blue-600 h-2 rounded transition-all" style={{ width: `${file.progress}%` }} />
               </div>
             </div>
