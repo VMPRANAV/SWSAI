@@ -1,122 +1,63 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import Header from './components/Header';
+import FileUpload from './components/FileUpload';
+import { useNotifications } from './hooks/Notification';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [files, setFiles] = useState([]);
+  const { notifications, unreadCount, fetchNotifications } = useNotifications();
+
+  const fetchFiles = async () => {
+    const res = await axios.get('http://localhost:5000/api/files');
+    setFiles(res.data);
+  };
+
+  const handleMarkAllRead = async () => {
+    await axios.patch('http://localhost:5000/api/notifications/read-all');
+    fetchNotifications();
+  };
+
+  useEffect(() => { fetchFiles(); }, []);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="min-h-screen bg-gray-50">
+      <Header 
+        unreadCount={unreadCount} 
+        notifications={notifications} 
+        onMarkAllRead={handleMarkAllRead} 
+      />
+      
+      <main className="max-w-4xl mx-auto p-8">
+        <FileUpload onUploadSuccess={fetchFiles} />
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+        <div className="mt-8 bg-white shadow rounded-lg overflow-hidden">
+          <table className="w-full text-left">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-4">Name</th>
+                <th className="p-4">Size</th>
+                <th className="p-4">Date</th>
+                <th className="p-4">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {files.map(file => (
+                <tr key={file._id} className="border-t">
+                  <td className="p-4">{file.originalName}</td>
+                  <td className="p-4">{(file.size / 1024).toFixed(2)} KB</td>
+                  <td className="p-4">{new Date(file.uploadDate).toLocaleDateString()}</td>
+                  <td className="p-4">
+                    <a href={`http://localhost:5000/${file.path}`} download className="text-blue-600">Download</a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
