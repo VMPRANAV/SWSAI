@@ -10,7 +10,6 @@ const handleUpload = async (req, res) => {
 
     const isBulk = files.length > 3;
 
-    // 1. Map files to Database Objects
     const fileData = files.map(file => ({
       originalName: file.originalname,
       size: file.size,
@@ -58,5 +57,41 @@ const handleUpload = async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error during upload.' });
   }
 };
-
-module.exports = { handleUpload };
+const getNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find().sort({ timestamp: -1 });
+    res.status(200).json(notifications);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch notifications' });
+  }
+};
+const getUnreadCount = async (req, res) => {
+  try {
+    const count = await Notification.countDocuments({ isRead: false });
+    res.status(200).json({ unreadCount: count });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to get count' });
+  }
+};
+const markAsRead = async (req, res) => {
+  try {
+    await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+    res.status(200).json({ message: 'Notification marked as read' });
+  } catch (error) {
+    res.status(500).json({ message: 'Update failed' });
+  }
+};
+const markAllAsRead = async (req, res) => {
+  try {
+    await Notification.updateMany({ isRead: false }, { isRead: true });
+    res.status(200).json({ message: 'All notifications marked as read' });
+  } catch (error) {
+    res.status(500).json({ message: 'Update all failed' });
+  }
+};
+module.exports = { handleUpload, 
+  getFiles, 
+  getNotifications, 
+  getUnreadCount, 
+  markAsRead, 
+  markAllAsRead };

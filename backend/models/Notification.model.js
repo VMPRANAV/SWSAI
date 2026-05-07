@@ -8,7 +8,8 @@ const notificationSchema = new mongoose.Schema({
     default: 'info' 
   },
   isRead: { type: Boolean, default: false },
-  timestamp: { type: Date, default: Date.now }
+  timestamp: { type: Date, default: Date.now },
+  bulkCount:{type:Number}
 });
 
 module.exports = mongoose.model('Notification', notificationSchema);
