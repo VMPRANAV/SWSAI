@@ -8,8 +8,6 @@ const { handleUpload,
   markAsRead, 
   markAllAsRead } = require('../controllers/upload.controller');
 
-
-router.post('/upload', upload.array('files', 20), handleUpload);
 router.get('/files', getFiles);
 router.get('/notifications', getNotifications);
 router.get('/notifications/unread-count', getUnreadCount);
